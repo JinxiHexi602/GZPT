@@ -1,0 +1,22 @@
+#!name = i赣职自定义请假
+#!desc = 在我的申请中添加一条自定义的学生请假申请
+#!author = JinxiHexi602
+#!homepage = https://github.com/JinxiHexi602/GZPT
+#!icon = https://raw.githubusercontent.com/JinxiHexi602/GZPT/main/gzpt.webp
+#!tag = 教务,移动学工,演示
+#!type = normal
+
+[Argument]
+leaveType = select,"事假","病假","探亲假","丧假","婚假","其它",tag=请假类型
+leaveFrom = select,"离校不离市","不离校","离市",tag=请假去向
+leaveStart = input,"",tag=开始时间
+leaveEnd = input,"",tag=结束时间
+reason = input,"",tag=请假理由
+
+[Script]
+request if ${url} ~= /^https:\/\/ydxy\.gzpt\.edu\.cn:6870\// then script("https://raw.githubusercontent.com/JinxiHexi602/GZPT/main/FakeLeaveRequest.js") with tag="请求", timeout=20
+
+response if ${url} ~= /^https:\/\/ydxy\.gzpt\.edu\.cn:6870\// && ${response.status} == 200 then script("https://raw.githubusercontent.com/JinxiHexi602/GZPT/main/FakeLeaveResponse.js", {${leaveType}, ${leaveFrom}, ${leaveStart}, ${leaveEnd}, ${reason}}) with tag="响应", timeout=20, requires_body=true
+
+[Mitm]
+hostname = ydxy.gzpt.edu.cn

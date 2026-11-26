@@ -1,0 +1,21 @@
+#!name=华辰杰 doneTargetTimes
+#!desc=修改 run-front/querySunRunAbstractInfoV2 返回中的 doneTargetTimes，数值由 argument 控制
+#!author=
+#!homepage=
+#!date=2026-11-26
+#!tag=run-front,doneTargetTimes
+
+[Script]
+# 主规则：只改这一个接口。数字就是你要的值，改完在 Loon 里重新启用插件即可。
+http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://github.com/JinxiHexi602/GZPT/raw/refs/heads/main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=doneTargetTimes=99&debug=0
+
+# 如果 App 还有别的接口返回同名字段（V1、详情页、列表页），启用这条更宽匹配的规则，
+# 并停用上面那条，避免同一个请求被两个脚本重复处理。
+# http-response ^https:\/\/api\.huachenjie\.com\/run-front\/ script-path=https://example.com/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes_all, argument=doneTargetTimes=99&debug=0
+
+# 需要改请求体时取消注释。请求头里有 sign，服务端很可能校验签名，
+# 改 body 后一般会签名错误/401，除非能同时重算 sign。
+# http-request ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://example.com/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes_req, argument=doneTargetTimes=99&mode=request&debug=0
+
+[MITM]
+hostname = %APPEND% api.huachenjie.com

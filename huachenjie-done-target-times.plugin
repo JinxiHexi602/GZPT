@@ -14,7 +14,7 @@ debug = switch,false,tag=调试日志,desc=在 Loon 日志里打印改前、改�
 enabled = switch,true,tag=启用
 
 [Script]
-http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://cdn.jsdelivr.net/gh/JinxiHexi602/GZPT@main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=[{doneTargetTimes},{donePercent},{debug}], enable={enabled}
+http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://github.com/JinxiHexi602/GZPT/raw/refs/heads/main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=[{doneTargetTimes},{donePercent},{debug}], enable={enabled}
 
 [MITM]
 hostname = %APPEND% api.huachenjie.com

@@ -7,7 +7,7 @@
 
 [Script]
 # 主规则：只改这一个接口。数字就是你要的值，改完在 Loon 里重新启用插件即可。
-http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://github.com/JinxiHexi602/GZPT/raw/refs/heads/main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=doneTargetTimes=99&debug=0
+http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://github.com/JinxiHexi602/GZPT/raw/refs/heads/main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=doneTargetTimes=30&debug=0
 
 # 如果 App 还有别的接口返回同名字段（V1、详情页、列表页），启用这条更宽匹配的规则，
 # 并停用上面那条，避免同一个请求被两个脚本重复处理。

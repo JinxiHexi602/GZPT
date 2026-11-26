@@ -1,45 +1,81 @@
 /************************************************************
- * 华辰杰 run-front · 自定义 doneTargetTimes
- * 目标接口：POST https://api.huachenjie.com/run-front/run/querySunRunAbstractInfoV2
+ * 华辰杰 run-front · 自定义 doneTargetTimes / donePercent
+ * 接口：POST https://api.huachenjie.com/run-front/run/querySunRunAbstractInfoV2
  *
- * 抓包里的 body 被隐藏了，所以这里用「深搜同名 key」的方式改，
- * 不管 doneTargetTimes 在 data 里、在数组元素里还是嵌套几层，都能命中。
+ * 参数来自插件 [Argument]（图形化）：$argument 是对象，如
+ *   { doneTargetTimes: 99, donePercent: 100, debug: false }
+ * 也兼容手动字符串写法：argument=doneTargetTimes=99&donePercent=100
  *
- * Loon [Script] 的 argument= 可用参数：
- *   doneTargetTimes=99   要改成多少，默认 99
- *   key=doneTargetTimes  要改的字段名（想改别的同构字段时用）
- *   mode=response        改响应（默认）；mode=request 改请求体
- *   debug=1              把改动前后的完整 JSON 打到 Loon 日志，用来确认真实字段
- *
- * 例：argument=doneTargetTimes=12&debug=1
+ * 规则：
+ *   - 只改传入的字段；某个字段填 -1（或 keep/off）表示这项不改
+ *   - 参数整体为空时用内置默认值 99 / 100
+ *   - 保留原值类型：3 -> 99，"87%" -> "100%"，0.85 -> 0.99
+ *   - debug 打开后把改前/改后的完整 JSON 打进 Loon 日志
  ************************************************************/
 
-var CFG = (function () {
-  var raw = (typeof $argument !== 'undefined' && $argument) ? String($argument) : '';
+var DEFAULTS = { doneTargetTimes: 99, donePercent: 100 };
+var RESERVED = { debug: 1, mode: 1, enabled: 1 };
+
+function readArgs() {
   var map = {};
-  raw.split('&').forEach(function (kv) {
+  if (typeof $argument === 'undefined' || $argument === null) return map;
+
+  if (typeof $argument === 'object') {
+    Object.keys($argument).forEach(function (k) { map[k] = $argument[k]; });
+    return map;
+  }
+
+  String($argument).split('&').forEach(function (kv) {
     if (!kv) return;
     var i = kv.indexOf('=');
     if (i < 0) { map[kv.trim()] = ''; return; }
     map[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
   });
+  return map;
+}
 
-  var value = Number(map.doneTargetTimes || map.value);
-  if (isNaN(value)) value = 99;
+var MAP = readArgs();
 
-  return {
-    key: map.key || 'doneTargetTimes',
-    value: value,
-    mode: (map.mode || 'response').toLowerCase(),
-    debug: map.debug === '1' || map.debug === 'true'
-  };
+var RULES = (function () {
+  var list = [];
+  var given = false;
+
+  Object.keys(MAP).forEach(function (k) {
+    if (RESERVED[k]) return;
+    given = true;
+
+    var v = MAP[k];
+    if (v === null || typeof v === 'undefined') return;
+
+    if (typeof v === 'string') {
+      v = v.trim();
+      if (v === '' || v === 'keep' || v === 'off') return;
+      var n = Number(v);
+      if (!isNaN(n)) v = n;
+    }
+
+    if (typeof v === 'number' && v === -1) return;
+
+    list.push({ key: k, value: v });
+  });
+
+  if (!given) {
+    Object.keys(DEFAULTS).forEach(function (k) {
+      list.push({ key: k, value: DEFAULTS[k] });
+    });
+  }
+  return list;
 })();
+
+var DEBUG = MAP.debug === true || MAP.debug === 1 || MAP.debug === '1' || MAP.debug === 'true';
+var MODE = String(MAP.mode || 'response').toLowerCase();
+var DISABLED = MAP.enabled === false || MAP.enabled === 'false';
 
 function log(msg) {
   console.log('[doneTargetTimes] ' + msg);
 }
 
-/* 保持原值类型：原来是数字就给数字，原来是 "3" 就给 "99"，是 "3次" 就保留单位 */
+/* 保持原值类型：数字给数字，"3" 给 "99"，"87%" 给 "100%" */
 function coerce(original, value) {
   if (typeof original === 'number') return value;
   if (typeof original === 'string') {
@@ -77,6 +113,12 @@ function handle(body) {
     return;
   }
 
+  if (!RULES.length) {
+    log('没有任何要改的字段（都填了 -1 / keep），原样放行');
+    $done({});
+    return;
+  }
+
   var obj;
   try {
     obj = JSON.parse(body);
@@ -86,23 +128,30 @@ function handle(body) {
     return;
   }
 
-  if (CFG.debug) log('before: ' + body);
+  if (DEBUG) log('before: ' + body);
 
-  var hits = rewrite(obj, CFG.key, CFG.value);
-  if (hits === 0) {
-    log('没有找到 ' + CFG.key + '，原样放行；加 debug=1 看完整 body');
+  var total = 0;
+  var report = RULES.map(function (r) {
+    var hits = rewrite(obj, r.key, r.value);
+    total += hits;
+    return r.key + '=' + r.value + ' (' + hits + ')';
+  });
+
+  if (!total) {
+    log('没有命中任何字段：' + report.join(', ') + '；打开「调试日志」看完整 body');
     $done({});
     return;
   }
 
   var out = JSON.stringify(obj);
-  if (CFG.debug) log('hits=' + hits + ' after: ' + out);
-  else log('hits=' + hits + ' -> ' + CFG.value);
-
+  if (DEBUG) log('after: ' + out);
+  log(report.join('; '));
   $done({ body: out });
 }
 
-if (CFG.mode === 'request') {
+if (DISABLED) {
+  $done({});
+} else if (MODE === 'request') {
   if (typeof $request !== 'undefined' && $request) handle($request.body);
   else $done({});
 } else {

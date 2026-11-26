@@ -8,8 +8,8 @@
 #!loon_version = 3.2.1(733)
 
 [Argument]
-doneTargetTimes = input,99,type=number,tag=目标次数,desc=doneTargetTimes 改成多少；填 -1 表示这一项不改
-donePercent = input,100,type=number,tag=完成百分比,desc=donePercent 改成多少（接口是 0-1 小数就填 0.99）；填 -1 表示这一项不改
+doneTargetTimes = input,30,type=number,tag=目标次数,desc=doneTargetTimes 改成多少；填 -1 表示这一项不改
+donePercent = input,83.3,type=number,tag=完成百分比,desc=donePercent 改成多少（接口是 0-1 小数就填 0.99）；填 -1 表示这一项不改
 debug = switch,false,tag=调试日志,desc=在 Loon 日志里打印改前、改后的完整 JSON
 enabled = switch,true,tag=启用
 

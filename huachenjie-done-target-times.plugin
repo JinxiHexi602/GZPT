@@ -1,21 +1,20 @@
-#!name=华辰杰 doneTargetTimes
-#!desc=修改 run-front/querySunRunAbstractInfoV2 返回中的 doneTargetTimes，数值由 argument 控制
-#!author=
-#!homepage=
-#!date=2026-11-26
-#!tag=run-front,doneTargetTimes
+#!name = 华辰杰 doneTargetTimes/donePercent
+#!desc = 修改 run-front/querySunRunAbstractInfoV2 返回中的 doneTargetTimes、donePercent，参数在插件详情页图形化调整
+#!author = JinxiHexi602
+#!homepage = https://github.com/JinxiHexi602/GZPT
+#!date = 2026-11-26
+#!tag = run-front
+#!type = normal
+#!loon_version = 3.2.1(733)
+
+[Argument]
+doneTargetTimes = input,99,type=number,tag=目标次数,desc=doneTargetTimes 改成多少；填 -1 表示这一项不改
+donePercent = input,100,type=number,tag=完成百分比,desc=donePercent 改成多少（接口是 0-1 小数就填 0.99）；填 -1 表示这一项不改
+debug = switch,false,tag=调试日志,desc=在 Loon 日志里打印改前、改后的完整 JSON
+enabled = switch,true,tag=启用
 
 [Script]
-# 主规则：只改这一个接口。数字就是你要的值，改完在 Loon 里重新启用插件即可。
-http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://github.com/JinxiHexi602/GZPT/raw/refs/heads/main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=doneTargetTimes=30&debug=0
-
-# 如果 App 还有别的接口返回同名字段（V1、详情页、列表页），启用这条更宽匹配的规则，
-# 并停用上面那条，避免同一个请求被两个脚本重复处理。
-# http-response ^https:\/\/api\.huachenjie\.com\/run-front\/ script-path=https://example.com/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes_all, argument=doneTargetTimes=99&debug=0
-
-# 需要改请求体时取消注释。请求头里有 sign，服务端很可能校验签名，
-# 改 body 后一般会签名错误/401，除非能同时重算 sign。
-# http-request ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://example.com/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes_req, argument=doneTargetTimes=99&mode=request&debug=0
+http-response ^https:\/\/api\.huachenjie\.com\/run-front\/run\/querySunRunAbstractInfoV2 script-path=https://cdn.jsdelivr.net/gh/JinxiHexi602/GZPT@main/huachenjie-done-target-times.js, requires-body=1, timeout=60, tag=doneTargetTimes, argument=[{doneTargetTimes},{donePercent},{debug}], enable={enabled}
 
 [MITM]
 hostname = %APPEND% api.huachenjie.com
